@@ -1,9 +1,11 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib.widgets import RadioButtons
 
 
-def plot_histogram(data: pd.DataFrame, field: str):
+def plot_histogram(data: pd.DataFrame, field: str, ax):
+    ax.clear()
     column = data[field]
     column.dropna()
     if column.empty:
@@ -20,7 +22,7 @@ def plot_histogram(data: pd.DataFrame, field: str):
         house_values = data.loc[data["Hogwarts House"] == house, field].dropna()
         if house_values.empty:
             continue
-        plt.hist(house_values, bins=bins, alpha=0.45, color=color, label=house)
+        ax.hist(house_values, bins=bins, alpha=0.45, color=color, label=house)
         hist.append(np.histogram(house_values, bins=bins)[0])
 
     trsp_hist = list(zip(*hist))
@@ -36,9 +38,8 @@ def plot_histogram(data: pd.DataFrame, field: str):
     if variabilite_indice < plot_histogram.static_var[0]:
         plot_histogram.static_var = (variabilite_indice, field)
 
-    plt.title(f"{field} ({variabilite_indice:.2f})")
-    plt.legend()
-    plt.show()
+    ax.set_title(f"{field} ({variabilite_indice:.2f})")
+    ax.legend()
     return plot_histogram.static_var
 
 
@@ -51,7 +52,8 @@ def get_scores(data: pd.DataFrame, field: str, house: str):
 def main():
     data = pd.read_csv("./datasets/dataset_train.csv")
 
-    best = None
+    # build the fields list:
+    fields = []
     for field in data.columns:
         if (
             not pd.api.types.is_numeric_dtype(data[field])
@@ -59,12 +61,36 @@ def main():
             or field == "Index"
         ):
             continue
-        best = plot_histogram(
-            data,
-            field,
-        )
-        if best is not None:
-            print(f"Current best : {best[1]} with score {best[0]:.2f}")
+        fields.append(field)
+
+    fig, ax = plt.subplots()
+
+    best = None
+
+    def update(field):
+        nonlocal best
+        best = plot_histogram(data, field, ax)
+        fig.canvas.draw_idle()
+
+    current_idx = current_idx = 10
+
+    def on_key(event):
+        nonlocal current_idx
+        if event.key == "right":
+            current_idx = (current_idx + 1) % len(fields)
+        elif event.key == "left":
+            current_idx = (current_idx - 1) % len(fields)
+        update(fields[current_idx])
+
+    fig.canvas.mpl_connect("key_press_event", on_key)
+
+    for field in fields:
+        update(field)
+    update(fields[10])
+
+    print("Use arrow keys to navigate courses")
+    plt.show()
+
     print(
         f"The course that has an homogoneous distribution across houses is {best[1] if best else 'unknown'}"
     )
