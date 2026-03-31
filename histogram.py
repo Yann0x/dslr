@@ -1,15 +1,12 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.widgets import RadioButtons
+
+from describe import my_var
 
 
 def plot_histogram(data: pd.DataFrame, field: str, ax):
     ax.clear()
-    column = data[field]
-    column.dropna()
-    if column.empty:
-        return
     house_colors = {
         "Ravenclaw": "royalblue",
         "Slytherin": "seagreen",
@@ -30,7 +27,7 @@ def plot_histogram(data: pd.DataFrame, field: str, ax):
 
     for bin in range(len(trsp_hist)):
         bin_values = [row for row in trsp_hist[bin]]
-        variabilite_indices.append(np.var(bin_values))
+        variabilite_indices.append(my_var(bin_values))
 
     variabilite_indice = sum(variabilite_indices) / bins
     if not hasattr(plot_histogram, "static_var"):
