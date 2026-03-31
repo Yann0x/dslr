@@ -8,7 +8,8 @@ import sys
 def add_histograms(features, axes):
     i: int = 0
     for element in features:
-        axes[i][i].hist(element)
+        axes[i][i].hist(features[element])
+        axes[i][i].set_title(str(element))
         i += 1
 
 
@@ -60,8 +61,7 @@ def main():
         print("No numeric columns found.")
         sys.exit(1)
     fig, axes = plt.subplots(len(numeric.dtypes), len(numeric.dtypes), figsize = (50,50))
-    num_list = [numeric[elem].to_list() for elem in numeric]
-    add_histograms(num_list, axes)
+    add_histograms(numeric, axes)
     add_versus(data, axes)
     plt.savefig("pair_plot.png", dpi=150)
     return
