@@ -8,3 +8,5 @@ pyvenv.cfg
 src/model.json
 __pycache__/
 *.pyc
+
+*.png
