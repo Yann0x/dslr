@@ -82,7 +82,7 @@ def main():
         best = plot_histogram(data, field, ax)
         fig.canvas.draw_idle()
 
-    current_idx = current_idx = 10
+    current_idx = 10
 
     def on_key(event):
         nonlocal current_idx
