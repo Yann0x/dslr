@@ -1,3 +1,5 @@
+import sys
+
 import matplotlib.pyplot as plt
 import pandas as pd
 
@@ -19,7 +21,19 @@ def normalize_field(col):
 
 
 def main():
-    data = pd.read_csv("datasets/dataset_train.csv")
+    if len(sys.argv) != 2:
+        print(f"Usage: python {sys.argv[0]} <dataset.csv>")
+        sys.exit(1)
+
+    try:
+        data = pd.read_csv(sys.argv[1])
+    except FileNotFoundError:
+        print(f"Error: file '{sys.argv[1]}' not found.")
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error reading file: {e}")
+        sys.exit(1)
+
     means = []
     for field in data.columns:
         if (
