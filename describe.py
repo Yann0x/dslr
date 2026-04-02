@@ -1,4 +1,5 @@
 import sys
+
 import pandas as pd
 
 
@@ -44,8 +45,7 @@ def quartile(args: list) -> list[float] | None:
         if quarts[i] != int(quarts[i]):
             index = int(quarts[i])
             rest = quarts[i] - int(quarts[i])
-            res.append(args_list[index] * (1 - rest)
-                       + args_list[index + 1] * rest)
+            res.append(args_list[index] * (1 - rest) + args_list[index + 1] * rest)
         else:
             res.append(args_list[int(quarts[i])])
     return res
@@ -106,6 +106,10 @@ def main():
         print(f"Error reading file: {e}")
         sys.exit(1)
 
+    describe(data)
+
+
+def describe(data: pd.DataFrame):
     numeric = data.select_dtypes(include="number")
     if numeric.empty:
         print("No numeric columns found.")
