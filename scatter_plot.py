@@ -83,7 +83,7 @@ def main():
         elif event.key == "left":
             idx2 -= 1
             if idx2 < 0:
-                idx2 = len(ields) - 1
+                idx2 = len(fields) - 1
                 idx1 = (idx1 - 1) % len(fields)
             if idx1 == idx2:
                 idx2 -= 1
