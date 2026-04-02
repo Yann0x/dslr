@@ -16,7 +16,12 @@ def plot_scatter(data: pd.DataFrame, field1, field2, ax):
         "Hufflepuff": "gold",
     }
     for house, color in house_colors.items():
-        house_data = data[data["Hogwarts House"] == house][[field1, field2]].dropna()
+        try:
+            house_data = data[data["Hogwarts House"] == house][
+                [field1, field2]
+            ].dropna()
+        except KeyError as e:
+            sys.exit(f"Error: no key {e} ")
         ax.scatter(
             house_data[field1],
             house_data[field2],
