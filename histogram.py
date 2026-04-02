@@ -18,7 +18,10 @@ def plot_histogram(data: pd.DataFrame, field: str, ax):
     bins = 30
     hist = []
     for house, color in house_colors.items():
-        house_values = data.loc[data["Hogwarts House"] == house, field].dropna()
+        try:
+            house_values = data.loc[data["Hogwarts House"] == house, field].dropna()
+        except KeyError as e:
+            sys.exit(f"Error: no key {e} ")
         if house_values.empty:
             continue
         ax.hist(house_values, bins=bins, alpha=0.45, color=color, label=house)
@@ -43,7 +46,10 @@ def plot_histogram(data: pd.DataFrame, field: str, ax):
 
 
 def get_scores(data: pd.DataFrame, field: str, house: str):
-    values = data.loc[data["Hogwarts House"] == house, field].dropna()
+    try:
+        values = data.loc[data["Hogwarts House"] == house, field].dropna()
+    except KeyError as e:
+        sys.exit(f"Error: no key {e} ")
     res = values.sum()
     return res
 
