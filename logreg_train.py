@@ -105,7 +105,7 @@ def main():
         normalisation_method="standardisation",
     )
 
-    epochs = 35
+    epochs = 1
     lr = 0.015
     print(f"running training for {epochs} epochs with {lr} learning rate")
 
