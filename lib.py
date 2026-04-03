@@ -2,6 +2,7 @@ import math
 import sys
 
 import pandas as pd
+import matplotlib.pyplot as plt
 
 
 class Model:
@@ -195,3 +196,12 @@ def argmax(list: list[float]):
         if val > list[max]:
             max = i
     return max
+
+def plot_accuracy(accuracy: list[float]):
+    mean_acc: list[float] = [x if (x := mean(accuracy[:i])) is not None else 0.0 for i in range(len(accuracy))]
+    plt.plot(mean_acc, label="Smoothed accuracy")
+    plt.title("Training accuracy over epochs")
+    plt.xlabel("Epoch")
+    plt.ylabel("Accuracy")
+    plt.legend()
+    plt.show()
