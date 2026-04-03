@@ -12,14 +12,18 @@ def train(data: pd.DataFrame, lr: float, epochs: int):
     houses = data.iloc[:, 0].unique()
     features = data.iloc[:, 1:]
     model = lib.Model(
-        weights=[[1.0 for _ in range(4)] for _ in range(len(houses))],
+        weights=[
+            [1.0 for _ in range(len(features.columns))] for _ in range(len(houses))
+        ],
         bias=[0.0 for _ in range(len(houses))],
         house_field=data.columns[0],
         houses_names=houses.tolist(),
         features=data.iloc[:, 1:].columns.to_list(),
     )
-    w_grad = [[0.0 for _ in range(4)] for _ in range(len(houses))]
-    b_grad = [0.0 for _ in range(len(houses))]
+    w_grad = [
+        [0.0 for _ in range(len(model.weights[0]))] for _ in range(len(model.weights))
+    ]
+    b_grad = [0.0 for _ in range(len(model.bias))]
     for epoch in range(epochs):
         for student in data.index:
             scores = features.loc[student].values
@@ -76,17 +80,29 @@ def main():
         print(f"Error reading file: {e}")
         sys.exit(1)
 
+    # On peut changer les features a garder ici tant que la premiere colonne
+    # est la valeur a prédire ca fonctionne mais ca ameliore pas les resultats
     fields_to_keep = [
         "Hogwarts House",
         "Astronomy",
         "Herbology",
         "Defense Against the Dark Arts",
         "Ancient Runes",
+        # "Charms",
+        # "Flying",
+        # "Transfiguration",
+        # "History of Magic",
+        # "Muggle Studies",
+        # "Divination",
+        # "Arithmancy",
+        # "Potions",
+        # "Care of Magical Creatures",
     ]
     data = df.filter(items=fields_to_keep)
 
     lib.standardisation(data)
     # robust_scaling(data)
+    print(data)
 
     epochs = 35
     lr = 0.015
