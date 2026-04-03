@@ -69,6 +69,15 @@ def scale(vec: list[float], scl: float) -> list[float]:
     return scaled_vec
 
 
+def predict(model, scores) -> list[float]:
+    weights = model[0]
+    bias = model[1]
+    pred = [0.0 for _ in range(len(weights))]
+    for idx, _ in enumerate(weights):
+        pred[idx] = dot(weights[idx], scores) + bias[idx]
+    return pred
+
+
 def train(data: pd.DataFrame, lr: float, epochs: int):
 
     to_predict = data.iloc[:, 0]
@@ -76,19 +85,17 @@ def train(data: pd.DataFrame, lr: float, epochs: int):
     features = data.iloc[:, 1:]
     weights = [[1.0 for _ in range(4)] for _ in range(len(houses))]
     bias = [0.0 for _ in range(len(houses))]
-    pred = [0.0 for _ in range(len(houses))]
     w_grad = [[0.0 for _ in range(4)] for _ in range(len(houses))]
     b_grad = [0.0 for _ in range(len(houses))]
 
     for epoch in range(epochs):
         for student in data.index:
             scores = features.loc[student].values
-            for idx, _ in enumerate(houses):
-                pred[idx] = dot(weights[idx], scores) + bias[idx]
+
+            pred = predict((weights, bias), scores)
             proba = softmax(pred)
             expected = list(houses).index(to_predict[student])
             loss = -math.log(proba[expected])
-
             print(f"for student{student} loss ->> {loss}")
             for idx, _ in enumerate(houses):
                 truth = 0
@@ -103,6 +110,36 @@ def train(data: pd.DataFrame, lr: float, epochs: int):
                     weights[idx][j] -= lr * w_grad[idx][j]
                 bias[idx] -= lr * b_grad[idx]
     return (weights, bias)
+
+
+def argmax(list: list[float]):
+    max = 0
+    for i, val in enumerate(list):
+        if val > list[max]:
+            max = i
+    return max
+
+
+def test_accuracy(data: pd.DataFrame, model: tuple[list[list[float]], list[float]]):
+    to_predict = data.iloc[:, 0]
+    houses = to_predict.unique()
+    features = data.iloc[:, 1:]
+    weights = model[0]
+    bias = model[1]
+    right = wrong = 0
+    for student in data.index:
+        scores = features.loc[student].values
+        pred = predict((weights, bias), scores)
+        proba = softmax(pred)
+        result = argmax(proba)
+        expected = list(houses).index(to_predict[student])
+        if result == expected:
+            right += 1
+        else:
+            wrong += 1
+
+    acc = right / (right + wrong)
+    print(f"{right} correct\n{wrong} incorrect\n {acc} accuracy")
 
 
 def main():
@@ -130,9 +167,11 @@ def main():
     # standardisation(data)
     robust_scaling(data)
 
-    (weights, bias) = train(data, lr=0.001, epochs=10)
+    model = train(data, lr=0.001, epochs=10)
+
+    test_accuracy(data, model)
     with open("model.json", "w") as file:
-        json.dump((weights, bias), file)
+        json.dump(model, file)
 
 
 if __name__ == "__main__":
