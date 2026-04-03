@@ -1,3 +1,5 @@
+import json
+import math
 import sys
 
 import pandas as pd
@@ -6,6 +8,7 @@ import describe as yann
 
 
 def interquartil_range(values: list):
+    """Compute the interquartil range (Q3 - Q1)"""
     quartiles = yann.quartile(values)
     if not quartiles:
         return None
@@ -23,7 +26,7 @@ def standardisation(data):
             sys.exit("Error: standard deviation is 0")
         for i in data[field].index:
             if pd.isna(data.loc[i, field]):
-                # data.loc[i, field] = mean
+                data.loc[i, field] = mean
                 continue
             data.loc[i, field] = (data.loc[i, field] - mean) / std
 
@@ -40,6 +43,66 @@ def robust_scaling(data):
                 data.loc[i, field] = 0
                 continue
             data.loc[i, field] = (data.loc[i, field] - med) / iqr
+
+
+def dot(v1: list, v2: list) -> float:
+    if len(v1) != len(v2):
+        print("Error: dot products require 2 vectors of the same length")
+    res = 0
+    for i1, i2 in zip(v1, v2):
+        res += i1 * i2
+    return res
+
+
+def softmax(vals: list) -> list[float]:
+    exp_vals = list(map(math.exp, vals))
+    res = [0.0 for _ in range(len(vals))]
+    sum_exp_vals = sum(exp_vals)
+    for i in range(len(vals)):
+        res[i] = exp_vals[i] / sum_exp_vals
+    return res
+
+
+def scale(vec: list[float], scl: float) -> list[float]:
+    """Scale a vector by a scalar value."""
+    scaled_vec = [x * scl for x in vec]
+    return scaled_vec
+
+
+def train(data: pd.DataFrame, lr: float, epochs: int):
+
+    to_predict = data.iloc[:, 0]
+    houses = to_predict.unique()
+    features = data.iloc[:, 1:]
+    weights = [[1.0 for _ in range(4)] for _ in range(len(houses))]
+    bias = [0.0 for _ in range(len(houses))]
+    pred = [0.0 for _ in range(len(houses))]
+    w_grad = [[0.0 for _ in range(4)] for _ in range(len(houses))]
+    b_grad = [0.0 for _ in range(len(houses))]
+
+    for epoch in range(epochs):
+        for student in data.index:
+            scores = features.loc[student].values
+            for idx, _ in enumerate(houses):
+                pred[idx] = dot(weights[idx], scores) + bias[idx]
+            proba = softmax(pred)
+            expected = list(houses).index(to_predict[student])
+            loss = -math.log(proba[expected])
+
+            print(f"for student{student} loss ->> {loss}")
+            for idx, _ in enumerate(houses):
+                truth = 0
+                if idx == expected:
+                    truth = 1
+                grad = proba[idx] - truth
+                w_grad[idx] = scale(scores, grad)
+                b_grad[idx] = grad
+
+            for idx, _ in enumerate(houses):
+                for j in range(len(weights[idx])):
+                    weights[idx][j] -= lr * w_grad[idx][j]
+                bias[idx] -= lr * b_grad[idx]
+    return (weights, bias)
 
 
 def main():
@@ -64,9 +127,12 @@ def main():
     ]
     data = df.filter(items=fields_to_keep)
 
-    yann.describe(data)
+    # standardisation(data)
     robust_scaling(data)
-    yann.describe(data)
+
+    (weights, bias) = train(data, lr=0.001, epochs=10)
+    with open("model.json", "w") as file:
+        json.dump((weights, bias), file)
 
 
 if __name__ == "__main__":
