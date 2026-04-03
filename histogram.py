@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from describe import my_var
+from lib import var
 
 
 def plot_histogram(data: pd.DataFrame, field: str, ax):
@@ -32,7 +32,7 @@ def plot_histogram(data: pd.DataFrame, field: str, ax):
 
     for bin in range(len(trsp_hist)):
         bin_values = [row for row in trsp_hist[bin]]
-        variabilite_indices.append(my_var(bin_values))
+        variabilite_indices.append(var(bin_values))
 
     variabilite_indice = sum(variabilite_indices) / bins
     if not hasattr(plot_histogram, "static_var"):

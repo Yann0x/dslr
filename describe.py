@@ -1,95 +1,6 @@
 import sys
-
 import pandas as pd
-
-
-def mean(args: list) -> float | None:
-    """Compute the arithmetic mean of the given values."""
-    if not args:
-        return None
-    try:
-        res = sum(elem for elem in args) / len(args)
-    except Exception:
-        return None
-    return res
-
-
-def median(args: list) -> float | int | None:
-    """Compute the median of the given values."""
-    if not args:
-        return None
-    try:
-        args_list = sorted(args)
-    except Exception:
-        return None
-    argssize = len(args_list) // 2
-    if len(args_list) % 2 == 0:
-        median = (args_list[argssize - 1] + args_list[argssize]) / 2
-    else:
-        median = args_list[argssize]
-    return median
-
-
-def quartile(args: list) -> list[float] | None:
-    """Compute the first , second and third quartiles of the given values."""
-    if not args:
-        return None
-    try:
-        args_list = sorted(args)
-    except Exception:
-        return None
-    argssize = len(args_list) - 1
-    quarts = [argssize / 4, argssize / 2, argssize * 3 / 4]
-    res = []
-    for i in range(3):
-        if quarts[i] != int(quarts[i]):
-            index = int(quarts[i])
-            rest = quarts[i] - int(quarts[i])
-            res.append(args_list[index] * (1 - rest) + args_list[index + 1] * rest)
-        else:
-            res.append(args_list[int(quarts[i])])
-    return res
-
-
-def my_var(args: list) -> float | int | None:
-    """Compute the variance of the given values."""
-    if len(args) < 2:
-        return None
-    meaning = mean(args)
-    if meaning is not None:
-        variance = sum((x - meaning) ** 2 for x in args) / (len(args) - 1)
-        return variance
-    return None
-
-
-def my_std(args: list) -> float | int | None:
-    """Compute the standard deviation of the given values."""
-    variance = my_var(args)
-    if variance is not None:
-        return variance**0.5
-    return None
-
-
-def my_min(args: list) -> float | int | None:
-    """Returns the smallest value in the args"""
-    if not args:
-        return None
-    min_val = args[0]
-    for elem in args:
-        if elem < min_val:
-            min_val = elem
-    return min_val
-
-
-def my_max(args: list) -> float | int | None:
-    """Returns the largest value in the args"""
-    if not args:
-        return None
-    max_val = args[0]
-    for elem in args:
-        if elem > max_val:
-            max_val = elem
-    return max_val
+import lib
 
 
 def main():
@@ -119,16 +30,26 @@ def describe(data: pd.DataFrame):
     for col in numeric.columns:
         stats = {}
         val = numeric[col].dropna().tolist()
-        quartiles = quartile(val)
+        quartiles = lib.quartile(val)
         stats["Count"] = len(val)
-        stats["Mean"] = mean(val)
-        stats["Std"] = my_std(val)
-        stats["Min"] = my_min(val)
+        stats["Mean"] = lib.mean(val)
+        stats["Std"] = lib.std(val)
+        stats["Min"] = lib.min(val)
         stats["25%"] = quartiles[0] if quartiles else None
         stats["50%"] = quartiles[1] if quartiles else None
         stats["75%"] = quartiles[2] if quartiles else None
-        stats["Max"] = my_max(val)
+        stats["Max"] = lib.max(val)
+        stats["Median"] = lib.median(val)
+        stats["Variance"] = lib.var(val)
+        stats["Range"] = (
+            stats["Max"] - stats["Min"]
+            if stats["Max"] is not None and stats["Min"] is not None
+            else None
+        )
+        stats["IQR"] = lib.interquartil_range(val)
+        stats["Skewness"] = lib.skewness(val)
         describe[col] = stats
+    pd.options.display.float_format = "{:.6f}".format
     print(pd.DataFrame(describe))
 
 
