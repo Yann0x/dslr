@@ -126,7 +126,9 @@ def skewness(args: list) -> float | int | None:
 
 def standardisation(data):
     """Standardisation on data (using mean and std deviation)"""
-    for field in data.columns[1:]:
+    for field in data.columns:
+        if not pd.api.types.is_numeric_dtype(data[field]):
+            continue
         field_mean = mean(data[field].dropna().to_list())
         field_std = std(data[field].dropna().to_list())
         if not std:
@@ -140,7 +142,9 @@ def standardisation(data):
 
 def robust_scaling(data):
     """Robust Scaling (using median and interquartil range (Q3 - Q1))"""
-    for field in data.columns[1:]:
+    for field in data.columns:
+        if not pd.api.types.is_numeric_dtype(data[field]):
+            continue
         med = median(data[field].dropna().to_list())
         iqr = interquartil_range(data[field].dropna().to_list())
         if not iqr:
