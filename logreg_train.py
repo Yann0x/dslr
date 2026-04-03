@@ -1,8 +1,9 @@
 import json
 import sys
 
-import lib as lib
 import pandas as pd
+
+import lib as lib
 
 
 def MINI_BATCH_GD(data: pd.DataFrame, model: lib.Model, lr: float, epochs: int):
@@ -168,10 +169,8 @@ def main():
         "Care of Magical Creatures",
     ]
     data = df.filter(items=fields_to_keep)
-
     lib.standardisation(data)
     # robust_scaling(data)
-
     possible_results = data.iloc[:, 0].unique().tolist()
 
     model = lib.Model(

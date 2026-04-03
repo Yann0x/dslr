@@ -1,8 +1,8 @@
 import math
 import sys
 
-import pandas as pd
 import matplotlib.pyplot as plt
+import pandas as pd
 
 
 class Model:
@@ -128,7 +128,7 @@ def skewness(args: list) -> float | int | None:
 def standardisation(data):
     """Standardisation on data (using mean and std deviation)"""
     for field in data.columns:
-        if not pd.api.types.is_numeric_dtype(data[field]):
+        if field == "Hogwarts House":
             continue
         field_mean = mean(data[field].dropna().to_list())
         field_std = std(data[field].dropna().to_list())
@@ -144,8 +144,9 @@ def standardisation(data):
 def robust_scaling(data):
     """Robust Scaling (using median and interquartil range (Q3 - Q1))"""
     for field in data.columns:
-        if not pd.api.types.is_numeric_dtype(data[field]):
-            continue
+        for field in data.columns:
+            if field == "Hogwarts House":
+                continue
         med = median(data[field].dropna().to_list())
         iqr = interquartil_range(data[field].dropna().to_list())
         if not iqr:
@@ -197,8 +198,12 @@ def argmax(list: list[float]):
             max = i
     return max
 
+
 def plot_accuracy(accuracy: list[float]):
-    mean_acc: list[float] = [x if (x := mean(accuracy[:i])) is not None else 0.0 for i in range(len(accuracy))]
+    mean_acc: list[float] = [
+        x if (x := mean(accuracy[:i])) is not None else 0.0
+        for i in range(len(accuracy))
+    ]
     plt.plot(mean_acc, label="Smoothed accuracy")
     plt.title("Training accuracy over epochs")
     plt.xlabel("Epoch")
