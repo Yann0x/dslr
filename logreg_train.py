@@ -95,8 +95,8 @@ def train(data: pd.DataFrame, lr: float, epochs: int):
             pred = predict((weights, bias), scores)
             proba = softmax(pred)
             expected = list(houses).index(to_predict[student])
-            loss = -math.log(proba[expected])
-            print(f"for student{student} loss ->> {loss}")
+            # loss = -math.log(proba[expected])
+            # print(f"for student{student} loss ->> {loss}")
             for idx, _ in enumerate(houses):
                 truth = 0
                 if idx == expected:
@@ -139,7 +139,7 @@ def test_accuracy(data: pd.DataFrame, model: tuple[list[list[float]], list[float
             wrong += 1
 
     acc = right / (right + wrong)
-    print(f"{right} correct\n{wrong} incorrect\n {acc} accuracy")
+    print(f"-- Result --\n{right} correct\n{wrong} incorrect\n {acc} accuracy")
 
 
 def main():
@@ -167,7 +167,10 @@ def main():
     # standardisation(data)
     robust_scaling(data)
 
-    model = train(data, lr=0.001, epochs=10)
+    epochs = 35
+    lr = 0.015
+    print(f"running training for {epochs} epochs with {lr} learning rate")
+    model = train(data, lr=lr, epochs=epochs)
 
     test_accuracy(data, model)
     with open("model.json", "w") as file:
