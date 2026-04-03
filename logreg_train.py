@@ -26,7 +26,7 @@ def standardisation(data):
             sys.exit("Error: standard deviation is 0")
         for i in data[field].index:
             if pd.isna(data.loc[i, field]):
-                data.loc[i, field] = mean
+                data.loc[i, field] = 0
                 continue
             data.loc[i, field] = (data.loc[i, field] - mean) / std
 
@@ -164,8 +164,8 @@ def main():
     ]
     data = df.filter(items=fields_to_keep)
 
-    # standardisation(data)
-    robust_scaling(data)
+    standardisation(data)
+    # robust_scaling(data)
 
     epochs = 35
     lr = 0.015
