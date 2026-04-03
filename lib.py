@@ -1,15 +1,17 @@
 import math
 import sys
+
 import pandas as pd
 
 
 class Model:
-    def __init__(self, weights, bias, house_field, houses_names, features):
+    def __init__(self, weights, bias, houses_names, features, normalisation_method):
         self.weights: list[list[float]] = weights
         self.bias: list[float] = bias
-        self.house_field: str = house_field
+        self.house_field: str = "Hogwarts House"
         self.houses_names: list[str] = houses_names
         self.features: list[str] = features
+        self.normalisation_method: str = normalisation_method
 
 
 def mean(args: list) -> float | None:
@@ -116,7 +118,7 @@ def skewness(args: list) -> float | int | None:
     args_mean = mean(args)
     args_std = std(args)
     if args_mean is not None and args_std is not None and args_std != 0:
-        res = sum(((x - args_mean) ** 3) for x in args) / len(args) / args_std ** 3
+        res = sum(((x - args_mean) ** 3) for x in args) / len(args) / args_std**3
     else:
         res = None
     return res
