@@ -3,7 +3,7 @@ import sys
 import matplotlib.pyplot as plt
 import pandas as pd
 
-import describe as yan
+import lib
 
 
 def plot_scatter(data: pd.DataFrame, field1, field2, ax):
@@ -38,8 +38,8 @@ def plot_scatter(data: pd.DataFrame, field1, field2, ax):
 
 # def normalize_field(col):
 #     field = col.to_list()
-#     min = yan.my_min(field)
-#     max = yan.my_max(field)
+#     min = lib.min(field)
+#     max = lib.max(field)
 #     values = [(x - min) / (max - min) for x in field]
 #     print(values)
 #     return values

@@ -1,8 +1,6 @@
 import math
-
+import sys
 import pandas as pd
-
-import describe as yann
 
 
 class Model:
@@ -14,9 +12,98 @@ class Model:
         self.features: list[str] = features
 
 
+def mean(args: list) -> float | None:
+    """Compute the arithmetic mean of the given values."""
+    if not args:
+        return None
+    try:
+        res = sum(elem for elem in args) / len(args)
+    except Exception:
+        return None
+    return res
+
+
+def median(args: list) -> float | int | None:
+    """Compute the median of the given values."""
+    if not args:
+        return None
+    try:
+        args_list = sorted(args)
+    except Exception:
+        return None
+    argssize = len(args_list) // 2
+    if len(args_list) % 2 == 0:
+        median = (args_list[argssize - 1] + args_list[argssize]) / 2
+    else:
+        median = args_list[argssize]
+    return median
+
+
+def quartile(args: list) -> list[float] | None:
+    """Compute the first , second and third quartiles of the given values."""
+    if not args:
+        return None
+    try:
+        args_list = sorted(args)
+    except Exception:
+        return None
+    argssize = len(args_list) - 1
+    quarts = [argssize / 4, argssize / 2, argssize * 3 / 4]
+    res = []
+    for i in range(3):
+        if quarts[i] != int(quarts[i]):
+            index = int(quarts[i])
+            rest = quarts[i] - int(quarts[i])
+            res.append(args_list[index] * (1 - rest) + args_list[index + 1] * rest)
+        else:
+            res.append(args_list[int(quarts[i])])
+    return res
+
+
+def var(args: list) -> float | int | None:
+    """Compute the variance of the given values."""
+    if len(args) < 2:
+        return None
+    meaning = mean(args)
+    if meaning is not None:
+        variance = sum((x - meaning) ** 2 for x in args) / (len(args) - 1)
+        return variance
+    return None
+
+
+def std(args: list) -> float | int | None:
+    """Compute the standard deviation of the given values."""
+    variance = var(args)
+    if variance is not None:
+        return variance**0.5
+    return None
+
+
+def min(args: list) -> float | int | None:
+    """Returns the smallest value in the args"""
+    if not args:
+        return None
+    min_val = args[0]
+    for elem in args:
+        if elem < min_val:
+            min_val = elem
+    return min_val
+
+
+def max(args: list) -> float | int | None:
+    """Returns the largest value in the args"""
+    if not args:
+        return None
+    max_val = args[0]
+    for elem in args:
+        if elem > max_val:
+            max_val = elem
+    return max_val
+
+
 def interquartil_range(values: list):
     """Compute the interquartil range (Q3 - Q1)"""
-    quartiles = yann.quartile(values)
+    quartiles = quartile(values)
     if not quartiles:
         return None
     q1 = quartiles[0]
@@ -24,24 +111,35 @@ def interquartil_range(values: list):
     return q3 - q1
 
 
+def skewness(args: list) -> float | int | None:
+    """Computes the skewness of the arg (is the list leaning left or right)"""
+    args_mean = mean(args)
+    args_std = std(args)
+    if args_mean is not None and args_std is not None and args_std != 0:
+        res = sum(((x - args_mean) ** 3) for x in args) / len(args) / args_std ** 3
+    else:
+        res = None
+    return res
+
+
 def standardisation(data):
     """Standardisation on data (using mean and std deviation)"""
     for field in data.columns[1:]:
-        mean = yann.mean(data[field].dropna().to_list())
-        std = yann.my_std(data[field].dropna().to_list())
+        field_mean = mean(data[field].dropna().to_list())
+        field_std = std(data[field].dropna().to_list())
         if not std:
             sys.exit("Error: standard deviation is 0")
         for i in data[field].index:
             if pd.isna(data.loc[i, field]):
                 data.loc[i, field] = 0
                 continue
-            data.loc[i, field] = (data.loc[i, field] - mean) / std
+            data.loc[i, field] = (data.loc[i, field] - field_mean) / field_std
 
 
 def robust_scaling(data):
     """Robust Scaling (using median and interquartil range (Q3 - Q1))"""
     for field in data.columns[1:]:
-        med = yann.median(data[field].dropna().to_list())
+        med = median(data[field].dropna().to_list())
         iqr = interquartil_range(data[field].dropna().to_list())
         if not iqr:
             sys.exit("Error: interquartil range is 0")
