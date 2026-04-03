@@ -5,7 +5,83 @@ import lib as lib
 import pandas as pd
 
 
-def train(data: pd.DataFrame, model: lib.Model, lr: float, epochs: int):
+def MINI_BATCH_GD(data: pd.DataFrame, model: lib.Model, lr: float, epochs: int):
+    to_predict = data[model.house_field]
+    features = data.iloc[:, 1:]
+    indexes = list(data.index)
+    batch_size = 32
+    accuracy: list[float] = []
+    for epoch in range(epochs):
+        accuracy.append(test_accuracy(data, model))
+        for i in range(int(len(data.index) / batch_size)):
+            w_grad = [
+                [0.0 for _ in range(len(model.weights[0]))]
+                for _ in range(len(model.weights))
+            ]
+            b_grad = [0.0 for _ in range(len(model.bias))]
+            batch = indexes[i * batch_size : (i + 1) * batch_size]
+            for j in range(batch_size):
+                scores = features.loc[batch[j]].values
+                pred = lib.predict(model, scores)
+                proba = lib.softmax(pred)
+                expected = list(model.houses_names).index(to_predict[batch[j]])
+                # loss = -math.log(proba[expected])
+                # print(f"for student{student} loss ->> {loss}")
+                for idx, _ in enumerate(model.houses_names):
+                    truth = 0
+                    if idx == expected:
+                        truth = 1
+                    grad = proba[idx] - truth
+                    scaled = lib.scale(scores, grad)
+                    for k in range(len(scaled)):
+                        w_grad[idx][k] += scaled[k]
+                    b_grad[idx] += grad
+            for idx, _ in enumerate(model.houses_names):
+                for j in range(len(model.weights[idx])):
+                    model.weights[idx][j] -= lr * w_grad[idx][j] / batch_size
+                model.bias[idx] -= lr * b_grad[idx] / batch_size
+        test_accuracy(data, model)
+    lib.plot_accuracy(accuracy)
+    print("Training Done")
+
+
+def BATCH_GD(data: pd.DataFrame, model: lib.Model, lr: float, epochs: int):
+    to_predict = data[model.house_field]
+    features = data.iloc[:, 1:]
+    accuracy: list[float] = []
+    for epoch in range(epochs):
+        accuracy.append(test_accuracy(data, model))
+        w_grad = [
+            [0.0 for _ in range(len(model.weights[0]))]
+            for _ in range(len(model.weights))
+        ]
+        b_grad = [0.0 for _ in range(len(model.bias))]
+        for student in data.index:
+            scores = features.loc[student].values
+            pred = lib.predict(model, scores)
+            proba = lib.softmax(pred)
+            expected = list(model.houses_names).index(to_predict[student])
+            # loss = -math.log(proba[expected])
+            # print(f"for student{student} loss ->> {loss}")
+            for idx, _ in enumerate(model.houses_names):
+                truth = 0
+                if idx == expected:
+                    truth = 1
+                grad = proba[idx] - truth
+                scaled = lib.scale(scores, grad)
+                for j in range(len(scaled)):
+                    w_grad[idx][j] += scaled[j]
+                b_grad[idx] += grad
+        for idx, _ in enumerate(model.houses_names):
+            for j in range(len(model.weights[idx])):
+                model.weights[idx][j] -= lr * w_grad[idx][j] / len(data.index)
+            model.bias[idx] -= lr * b_grad[idx] / len(data.index)
+        test_accuracy(data, model)
+    lib.plot_accuracy(accuracy)
+    print("Training Done")
+
+
+def SGD(data: pd.DataFrame, model: lib.Model, lr: float, epochs: int):
 
     to_predict = data[model.house_field]
     features = data.iloc[:, 1:]
@@ -13,7 +89,9 @@ def train(data: pd.DataFrame, model: lib.Model, lr: float, epochs: int):
         [0.0 for _ in range(len(model.weights[0]))] for _ in range(len(model.weights))
     ]
     b_grad = [0.0 for _ in range(len(model.bias))]
+    accuracy: list[float] = []
     for epoch in range(epochs):
+        accuracy.append(test_accuracy(data, model))
         for student in data.index:
             scores = features.loc[student].values
             pred = lib.predict(model, scores)
@@ -33,10 +111,11 @@ def train(data: pd.DataFrame, model: lib.Model, lr: float, epochs: int):
                 for j in range(len(model.weights[idx])):
                     model.weights[idx][j] -= lr * w_grad[idx][j]
                 model.bias[idx] -= lr * b_grad[idx]
+    lib.plot_accuracy(accuracy)
     print("Training Done")
 
 
-def test_accuracy(data: pd.DataFrame, model: lib.Model):
+def test_accuracy(data: pd.DataFrame, model: lib.Model) -> float:
     to_predict = data.iloc[:, 0]
     houses = to_predict.unique()
     features = data.iloc[:, 1:]
@@ -52,13 +131,14 @@ def test_accuracy(data: pd.DataFrame, model: lib.Model):
         else:
             wrong += 1
 
-    acc = right / (right + wrong)
+    acc: float = right / (right + wrong)
     print(f"-- Result --\n{right} correct\n{wrong} incorrect\n {acc} accuracy")
+    return acc
 
 
 def main():
-    if len(sys.argv) != 2:
-        print(f"Usage: python {sys.argv[0]} <dataset.csv>")
+    if len(sys.argv) < 2 or len(sys.argv) > 3:
+        print(f"Usage: python {sys.argv[0]} <dataset.csv> <optional_algorithm>")
         sys.exit(1)
     try:
         df = pd.read_csv(sys.argv[1])
@@ -85,7 +165,7 @@ def main():
         # "Divination",
         # "Arithmancy",
         # "Potions",
-        # "Care of Magical Creatures",
+        "Care of Magical Creatures",
     ]
     data = df.filter(items=fields_to_keep)
 
@@ -105,11 +185,25 @@ def main():
         normalisation_method="standardisation",
     )
 
-    epochs = 1
+    epochs = 50
     lr = 0.015
-    print(f"running training for {epochs} epochs with {lr} learning rate")
-
-    train(data, model, lr=lr, epochs=epochs)
+    algos = {"BATCH": BATCH_GD, "MINI_BATCH": MINI_BATCH_GD, "SGD": SGD}
+    if len(sys.argv) == 3:
+        if sys.argv[2] not in algos:
+            print(
+                f"Error Wrong algo given as arg, correct ones are: 'BATCH', 'MINI_BATCH', 'SGD'"
+            )
+            sys.exit(1)
+        else:
+            print(
+                f"Training model with {sys.argv[2]} algo on learning rate {lr} and {epochs} epochs"
+            )
+            algos[sys.argv[2]](data, model, lr=lr, epochs=epochs)
+    else:
+        print(
+            f"Training model with Batch GD algo on learning rate {lr} and {epochs} epochs"
+        )
+        BATCH_GD(data, model, lr=lr, epochs=epochs)
 
     test_accuracy(data, model)
     with open("model.json", "w") as file:
