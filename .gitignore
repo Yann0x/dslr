@@ -10,4 +10,8 @@ __pycache__/
 *.pyc
 
 *.png
+<<<<<<< HEAD
 model.json
+=======
+*.json
+>>>>>>> f5237d30412e4a1bda0c9955ad3343fb0d6755eb
