@@ -1,25 +1,14 @@
 import json
 import sys
 
+import lib as lib
 import pandas as pd
 
-import lib as lib
 
+def train(data: pd.DataFrame, model: lib.Model, lr: float, epochs: int):
 
-def train(data: pd.DataFrame, lr: float, epochs: int):
-
-    to_predict = data.iloc[:, 0]
-    houses = data.iloc[:, 0].unique()
+    to_predict = data[model.house_field]
     features = data.iloc[:, 1:]
-    model = lib.Model(
-        weights=[
-            [1.0 for _ in range(len(features.columns))] for _ in range(len(houses))
-        ],
-        bias=[0.0 for _ in range(len(houses))],
-        house_field=data.columns[0],
-        houses_names=houses.tolist(),
-        features=data.iloc[:, 1:].columns.to_list(),
-    )
     w_grad = [
         [0.0 for _ in range(len(model.weights[0]))] for _ in range(len(model.weights))
     ]
@@ -29,10 +18,10 @@ def train(data: pd.DataFrame, lr: float, epochs: int):
             scores = features.loc[student].values
             pred = lib.predict(model, scores)
             proba = lib.softmax(pred)
-            expected = list(houses).index(to_predict[student])
+            expected = list(model.houses_names).index(to_predict[student])
             # loss = -math.log(proba[expected])
             # print(f"for student{student} loss ->> {loss}")
-            for idx, _ in enumerate(houses):
+            for idx, _ in enumerate(model.houses_names):
                 truth = 0
                 if idx == expected:
                     truth = 1
@@ -40,11 +29,11 @@ def train(data: pd.DataFrame, lr: float, epochs: int):
                 w_grad[idx] = lib.scale(scores, grad)
                 b_grad[idx] = grad
 
-            for idx, _ in enumerate(houses):
+            for idx, _ in enumerate(model.houses_names):
                 for j in range(len(model.weights[idx])):
                     model.weights[idx][j] -= lr * w_grad[idx][j]
                 model.bias[idx] -= lr * b_grad[idx]
-    return model
+    print("Training Done")
 
 
 def test_accuracy(data: pd.DataFrame, model: lib.Model):
@@ -102,12 +91,25 @@ def main():
 
     lib.standardisation(data)
     # robust_scaling(data)
-    print(data)
+
+    possible_results = data.iloc[:, 0].unique().tolist()
+
+    model = lib.Model(
+        weights=[
+            [1.0 for _ in range(len(fields_to_keep) - 1)]
+            for _ in range(len(possible_results))
+        ],
+        bias=[0.0 for _ in range(len(possible_results))],
+        houses_names=possible_results,
+        features=data.iloc[:, 1:].columns.to_list(),
+        normalisation_method="standardisation",
+    )
 
     epochs = 35
     lr = 0.015
     print(f"running training for {epochs} epochs with {lr} learning rate")
-    model = train(data, lr=lr, epochs=epochs)
+
+    train(data, model, lr=lr, epochs=epochs)
 
     test_accuracy(data, model)
     with open("model.json", "w") as file:
