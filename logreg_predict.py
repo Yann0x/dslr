@@ -1,20 +1,22 @@
 import json
 import sys
 
-import lib
 import pandas as pd
+
+import lib
 
 
 def predict(data: pd.DataFrame, model: lib.Model):
-    pred = [0.0 for _ in range(len(model.houses_names))]
-    print(f"Index,{model.house_field}")
-    for student in data.index:
-        scores = data.loc[student].values
-        for idx, _ in enumerate(model.houses_names):
-            pred[idx] = lib.dot(model.weights[idx], scores) + model.bias[idx]
-        proba = lib.softmax(pred)
-        res = model.houses_names[lib.argmax(proba)]
-        print(f"{student},{res}")
+    with open("houses.csv", "w") as file:
+        pred = [0.0 for _ in range(len(model.houses_names))]
+        print(f"Index,{model.house_field}", file=file)
+        for student in data.index:
+            scores = data.loc[student].values
+            for idx, _ in enumerate(model.houses_names):
+                pred[idx] = lib.dot(model.weights[idx], scores) + model.bias[idx]
+            proba = lib.softmax(pred)
+            res = model.houses_names[lib.argmax(proba)]
+            print(f"{student},{res}", file=file)
 
 
 def main():
@@ -30,8 +32,12 @@ def main():
         print(f"Error reading file: {e}")
         sys.exit(1)
 
-    with open("model.json", "r") as file:
-        dict_model = json.load(file)
+    try:
+        with open("model.json", "r") as file:
+            dict_model = json.load(file)
+    except Exception as e:
+        print(f"Error: {e}\nMake sure you run the train program before")
+        sys.exit(1)
 
     model = lib.Model(
         dict_model["weights"],
