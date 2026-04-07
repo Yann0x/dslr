@@ -1,6 +1,8 @@
 import math
 import sys
 
+import matplotlib
+matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 import pandas as pd
 
@@ -132,7 +134,7 @@ def standardisation(data):
             continue
         field_mean = mean(data[field].dropna().to_list())
         field_std = std(data[field].dropna().to_list())
-        if not std:
+        if not field_std:
             sys.exit("Error: standard deviation is 0")
         for i in data[field].index:
             if pd.isna(data.loc[i, field]):
@@ -142,11 +144,10 @@ def standardisation(data):
 
 
 def robust_scaling(data):
-    """Robust Scaling (using median and interquartil range (Q3 - Q1))"""
+    """Robust Scaling (using median and interquartile range (Q3 - Q1))"""
     for field in data.columns:
-        for field in data.columns:
-            if field == "Hogwarts House":
-                continue
+        if field == "Hogwarts House":
+            continue
         med = median(data[field].dropna().to_list())
         iqr = interquartil_range(data[field].dropna().to_list())
         if not iqr:

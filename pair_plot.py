@@ -1,5 +1,6 @@
 from matplotlib.axes import Axes
 import matplotlib
+matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 import pandas as pd
 import sys
