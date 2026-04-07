@@ -6,11 +6,31 @@ import pandas as pd
 import sys
 
 
-def add_histograms(features, axes):
+def add_histograms(data: pd.DataFrame, axes):
+    house_colors = {
+        "Ravenclaw": "royalblue",
+        "Slytherin": "seagreen",
+        "Gryffindor": "firebrick",
+        "Hufflepuff": "gold",
+    }
     i: int = 0
-    for element in features:
-        axes[i][i].hist(features[element])
-        axes[i][i].set_title(str(element))
+    bins = 30
+    numeric_raw = data.select_dtypes(include="number")
+    if "Index" in numeric_raw.columns:
+        numeric_raw = numeric_raw.drop("Index", axis=1)
+    numeric = numeric_raw.dropna()
+    for element in numeric:
+        ax: Axes = axes[i][i]
+        for house, color in house_colors.items():
+            try:
+                house_values = data.loc[data["Hogwarts House"] == house, element].dropna()
+            except KeyError as e:
+                sys.exit(f"Error: no key {e} ")
+            if house_values.empty:
+                continue
+            ax.hist(house_values, alpha=0.45, bins=bins, color=color, label=house)
+        ax.set_title(str(element))
+        ax.legend()
         i += 1
 
 
@@ -62,7 +82,7 @@ def main():
         print("No numeric columns found.")
         sys.exit(1)
     fig, axes = plt.subplots(len(numeric.dtypes), len(numeric.dtypes), figsize = (50,50))
-    add_histograms(numeric, axes)
+    add_histograms(data, axes)
     add_versus(data, axes)
     plt.savefig("pair_plot.png", dpi=150)
     return
