@@ -172,6 +172,11 @@ def main():
     lib.standardisation(data)
     # robust_scaling(data)
     possible_results = data.iloc[:, 0].unique().tolist()
+    if len(data["Hogwarts House"].dropna()) != len(data):
+        print(
+            "Hogwarts house fields must be set for every row. use the correct train dataset"
+        )
+        sys.exit(1)
 
     model = lib.Model(
         weights=[
