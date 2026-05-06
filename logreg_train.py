@@ -166,7 +166,7 @@ def main():
         # "Divination",
         # "Arithmancy",
         # "Potions",
-        "Care of Magical Creatures",
+        # "Care of Magical Creatures",
     ]
     data = df.filter(items=fields_to_keep)
     lib.standardisation(data)
